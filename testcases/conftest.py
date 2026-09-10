@@ -1,5 +1,5 @@
 
-
+import os
 import pytest
 import allure
 import json
@@ -62,9 +62,10 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture(scope="session")
 def browser():
+    headless = os.getenv("HEADLESS", "false").lower() == "true"   # added
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
-            headless=False,
+            headless=headless,                      # was: headless=False
             args=["--start-maximized"],
         )
         yield browser
