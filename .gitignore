@@ -17,6 +17,14 @@ downloads/
 screenshots/
 state.json
 
+# Selenium / browser runtime artifacts
+.geckodriver.log
+.chromedriver.log
+*.log
+
 # Editor and OS files
 .idea/
 .DS_Store
+
+# Local Selenium guide / downloaded artifacts
+*selenium*
