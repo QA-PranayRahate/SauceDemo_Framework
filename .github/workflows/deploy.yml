@@ -1,0 +1,105 @@
+name: SauceDemo Playwright + Pytest CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Which test suite to run'
+        required: true
+        default: 'regression'
+        type: choice
+        options:
+          - regression
+          - e2e
+      headless:
+        description: 'Run browser in headless mode'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  PYTHONPATH: ${{ github.workspace }}
+  ALLURE_RESULTS: allure-results
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Create virtual environment and install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: |
+          source .venv/bin/activate
+          python -m playwright install --with-deps
+
+      - name: Run regression tests
+        if: ${{ github.event.inputs.test_suite == 'regression' || github.event.inputs.test_suite == '' }}
+        run: |
+          source .venv/bin/activate
+          python -m pytest testcases -m regression --alluredir=allure-results --clean-alluredir -v -s
+
+      - name: Run E2E test
+        if: ${{ github.event.inputs.test_suite == 'e2e' }}
+        run: |
+          source .venv/bin/activate
+          python -m pytest testcases/e2e/Test_EndToEnd.py --alluredir=allure-results --clean-alluredir -v -s
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 14
+
+      - name: Upload screenshots and traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-artifacts
+          path: |
+            screenshots/
+            traces/
+          retention-days: 14
+
+  publish-report:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@v1.9
+        with:
+          allure_results: allure-results
+          allure_report: allure-report
+
+      - name: Upload Allure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+          retention-days: 14
