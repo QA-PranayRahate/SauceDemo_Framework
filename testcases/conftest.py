@@ -21,7 +21,7 @@ from Page.LoginPage import LoginPage
 from Page.ProductPage import ProductPage
 from Page.OrderConfirmationPage import OrderConfirmationPage
 
-with Path(__file__).with_name('login_details.json').open(encoding='utf-8') as login_details_file:
+with (Path(__file__).parent.parent / ".auth" / "login_details.json").open(encoding='utf-8') as login_details_file:
     LOGIN_DETAILS = json.load(login_details_file)
 
 DEFAULT_USERNAME = LOGIN_DETAILS['username']

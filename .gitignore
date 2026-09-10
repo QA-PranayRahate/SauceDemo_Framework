@@ -1,0 +1,22 @@
+# Python virtual environments and dependency cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.pyre/
+
+# Playwright / Selenium / test-generated artifacts
+traces/
+allure-results/
+allure-report/
+reports/
+roughwork/
+downloads/
+screenshots/
+state.json
+
+# Editor and OS files
+.idea/
+.DS_Store
