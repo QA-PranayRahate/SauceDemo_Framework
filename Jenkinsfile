@@ -38,7 +38,7 @@ pipeline {
                     } else {
                         bat '''
                             python -m venv .venv
-                            .\.venv\\Scripts\\activate.bat
+                            call .\\.venv\\Scripts\\activate.bat
                             python -m pip install --upgrade pip
                             pip install -r requirements.txt
                         '''
@@ -60,7 +60,7 @@ pipeline {
                         '''
                     } else {
                         bat '''
-                            .\.venv\\Scripts\\activate.bat
+                            call .\\.venv\\Scripts\\activate.bat
                             python -m pytest testcases -m regression --alluredir=allure-results --clean-alluredir -v -s
                         '''
                     }
@@ -81,7 +81,7 @@ pipeline {
                         '''
                     } else {
                         bat '''
-                            .\.venv\\Scripts\\activate.bat
+                            call .\\.venv\\Scripts\\activate.bat
                             python -m pytest testcases/e2e/Test_EndToEnd.py --alluredir=allure-results --clean-alluredir -v -s
                         '''
                     }
