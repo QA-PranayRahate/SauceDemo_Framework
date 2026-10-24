@@ -176,6 +176,11 @@ Run tests with Allure results:
 pytest --alluredir=allure-results --clean-alluredir
 ```
 
+When the Allure CLI is installed, pytest automatically generates the HTML
+report in `allure-report` after the test run. Open `allure-report/index.html`
+to view it. GitHub Actions also generates and uploads the report as a workflow
+artifact.
+
 ---
 
 ## 🔄 CI/CD with Jenkins

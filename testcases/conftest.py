@@ -163,32 +163,49 @@ def orderconfirmation(page):
 
 def pytest_sessionfinish(session, exitstatus):
     allure_results_path = Path('allure-results').resolve()
+    allure_report_path = Path('allure-report').resolve()
     terminal_reporter = session.config.pluginmanager.get_plugin('terminalreporter')
-
-    if terminal_reporter:
-        terminal_reporter.write_sep('=', 'Test reports')
-        terminal_reporter.write_line(f'Allure results: {allure_results_path}')
-        terminal_reporter.write_line('Allure command: allure serve allure-results')
 
     allure_command = (
         shutil.which('allure.cmd')
         or shutil.which('allure.exe')
         or shutil.which('allure')
     )
-    if allure_command and allure_results_path.exists():
-        if allure_command.lower().endswith('.ps1'):
-            command = [
-                'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass',
-                '-File', allure_command, 'serve', str(allure_results_path),
-            ]
-        else:
-            command = [allure_command, 'serve', str(allure_results_path)]
-
-        try:
-            subprocess.Popen(
-                command,
-                creationflags=getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0),
+    if not allure_results_path.exists():
+        if terminal_reporter:
+            terminal_reporter.write_line(
+                f'Allure results directory does not exist: {allure_results_path}'
             )
-        except OSError as error:
-            if terminal_reporter:
-                terminal_reporter.write_line(f'Unable to launch Allure: {error}')
+        return
+
+    if not allure_command:
+        if terminal_reporter:
+            terminal_reporter.write_line(
+                'Allure CLI was not found; results were saved to '
+                f'{allure_results_path}, but the HTML report was not generated.'
+            )
+        return
+
+    if allure_command.lower().endswith('.ps1'):
+        command = [
+            'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+            '-File', allure_command, 'generate', str(allure_results_path),
+            '--clean', '-o', str(allure_report_path),
+        ]
+    else:
+        command = [
+            allure_command, 'generate', str(allure_results_path),
+            '--clean', '-o', str(allure_report_path),
+        ]
+
+    result = subprocess.run(command, check=False)
+    if terminal_reporter:
+        if result.returncode == 0:
+            terminal_reporter.write_line(
+                f'Allure HTML report generated: {allure_report_path}'
+            )
+        else:
+            terminal_reporter.write_line(
+                f'Allure report generation failed with exit code {result.returncode}. '
+                f'Results remain available at {allure_results_path}.'
+            )
