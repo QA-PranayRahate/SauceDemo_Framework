@@ -39,16 +39,14 @@ pipeline {
                         sh '''
                             python3 -m venv .venv
                             . .venv/bin/activate
-                            python -m pip install --upgrade pip
-                            pip install -r requirements.txt
+                            python -m pip install --retries 5 --timeout 60 -r requirements.txt
                             python -m playwright install $PLAYWRIGHT_BROWSER
                         '''
                     } else {
                         bat '''
                             python -m venv .venv
                             call .\\.venv\\Scripts\\activate.bat
-                            python -m pip install --upgrade pip
-                            pip install -r requirements.txt
+                            python -m pip install --retries 5 --timeout 60 -r requirements.txt
                             python -m playwright install %PLAYWRIGHT_BROWSER%
                         '''
                     }

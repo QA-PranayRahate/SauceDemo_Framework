@@ -54,8 +54,7 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --retries 5 --timeout 60 -r requirements.txt
 
       - name: Install Playwright browsers
         run: |
