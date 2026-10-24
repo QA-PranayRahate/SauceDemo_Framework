@@ -45,16 +45,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate SauceDemo credentials
-        env:
-          SWAG_DEMO_USERNAME: ${{ secrets.SWAG_DEMO_USERNAME }}
-          SWAG_DEMO_PASSWORD: ${{ secrets.SWAG_DEMO_PASSWORD }}
-        run: |
-          if [ -z "$SWAG_DEMO_USERNAME" ] || [ -z "$SWAG_DEMO_PASSWORD" ]; then
-            echo "::error::Configure SWAG_DEMO_USERNAME and SWAG_DEMO_PASSWORD in repository Actions secrets."
-            exit 1
-          fi
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -74,18 +64,12 @@ jobs:
 
       - name: Run regression tests
         if: ${{ github.event.inputs.test_suite == 'regression' || github.event.inputs.test_suite == '' }}
-        env:
-          SWAG_DEMO_USERNAME: ${{ secrets.SWAG_DEMO_USERNAME }}
-          SWAG_DEMO_PASSWORD: ${{ secrets.SWAG_DEMO_PASSWORD }}
         run: |
           source .venv/bin/activate
           python -m pytest testcases -m regression --my-browser "$BROWSER" $HEADLESS_OPTION --alluredir=allure-results --clean-alluredir -v -s
 
       - name: Run E2E test
         if: ${{ github.event.inputs.test_suite == 'e2e' }}
-        env:
-          SWAG_DEMO_USERNAME: ${{ secrets.SWAG_DEMO_USERNAME }}
-          SWAG_DEMO_PASSWORD: ${{ secrets.SWAG_DEMO_PASSWORD }}
         run: |
           source .venv/bin/activate
           python -m pytest testcases/e2e/Test_EndToEnd.py --my-browser "$BROWSER" $HEADLESS_OPTION --alluredir=allure-results --clean-alluredir -v -s
