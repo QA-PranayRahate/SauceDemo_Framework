@@ -86,9 +86,11 @@ def browser(request):
                 args=["--start-maximized"],
             )
         elif browser_name == "firefox":
-            browser = playwright.firefox.launch(headless=headless)
+            browser = playwright.firefox.launch(headless=headless,args=["--start-maximized"])
         elif browser_name == "webkit":
-            browser = playwright.webkit.launch(headless=headless)
+            browser = playwright.webkit.launch(headless=headless,args=["--start-maximized"])
+        elif browser_name=='edge':
+            browser=playwright.chromium.launch(channel='msedge',headless=headless,args=["--start-maximized"])
         else:
             raise pytest.UsageError(
                 f"Unsupported browser '{browser_name}'. Choose chromium, firefox, or webkit."
