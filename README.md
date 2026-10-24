@@ -187,6 +187,11 @@ A `Jenkinsfile` is included in the repository. The pipeline supports a parameter
 
 This allows Jenkins to run the appropriate test suite dynamically.
 
+For GitHub Actions, add repository Actions secrets named `SWAG_DEMO_USERNAME`
+and `SWAG_DEMO_PASSWORD`. The workflow uses these credentials for the login
+tests and supports selecting the browser and headless mode when manually
+triggered.
+
 ---
 
 ## 📊 Reporting with Allure
