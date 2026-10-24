@@ -2,6 +2,7 @@ import pytest
 import allure
 from playwright.sync_api import sync_playwright,expect
 @pytest.mark.regression
+@pytest.mark.run(order=5)
 class Test_checkout:
 
     def test_current_url(self, checkoutpage):

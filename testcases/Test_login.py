@@ -1,24 +1,12 @@
-import json
-from pathlib import Path
-
 import pytest
 import allure
 
-with (Path(__file__).parent.parent / ".auth" / "login_details.json").open(encoding='utf-8') as login_details_file:
-    LOGIN_DETAILS = json.load(login_details_file)
-
-TEST_USERS = [
-    (LOGIN_DETAILS['username'], LOGIN_DETAILS['password']),
-]
-
 @pytest.mark.regression
+@pytest.mark.run(order=1)
 class TestLogin:
-    @pytest.mark.parametrize('username,password', TEST_USERS)
-    def test_login(self,page,username,password,homepage):
+    def test_login(self, loginpage, login_credentials, homepage):
+        username, password = login_credentials
         with allure.step("Verify successful login and inventory page"):
+            loginpage.login_as_standard_user(username, password)
             assert 'https://www.saucedemo.com/inventory.html' in homepage.get_current_url()
             assert 'Swag Labs' in homepage.get_dashboard_text()
-
-
-
-

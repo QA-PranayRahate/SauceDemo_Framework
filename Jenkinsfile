@@ -7,6 +7,11 @@ pipeline {
             choices: ['regression', 'e2e'],
             description: 'Choose the test suite to run in this Jenkins job.'
         )
+        choice(
+            name: 'BROWSER',
+            choices: ['chrome', 'firefox', 'webkit'],
+            description: 'Choose the browser engine for the test run.'
+        )
         booleanParam(
             name: 'HEADLESS',
             defaultValue: false,
@@ -22,6 +27,8 @@ pipeline {
     environment {
         PYTHONPATH = "${env.WORKSPACE}"
         ALLURE_RESULTS = 'allure-results'
+        HEADLESS_OPTION = "${params.HEADLESS ? '--no-headed' : ''}"
+        PLAYWRIGHT_BROWSER = "${params.BROWSER == 'chrome' ? 'chromium' : params.BROWSER}"
     }
 
     stages {
@@ -34,6 +41,7 @@ pipeline {
                             . .venv/bin/activate
                             python -m pip install --upgrade pip
                             pip install -r requirements.txt
+                            python -m playwright install $PLAYWRIGHT_BROWSER
                         '''
                     } else {
                         bat '''
@@ -41,6 +49,7 @@ pipeline {
                             call .\\.venv\\Scripts\\activate.bat
                             python -m pip install --upgrade pip
                             pip install -r requirements.txt
+                            python -m playwright install %PLAYWRIGHT_BROWSER%
                         '''
                     }
                 }
@@ -56,12 +65,12 @@ pipeline {
                     if (isUnix()) {
                         sh '''
                             . .venv/bin/activate
-                            python -m pytest testcases -m regression --alluredir=allure-results --clean-alluredir -v -s
+                            python -m pytest testcases -m regression --my-browser $BROWSER $HEADLESS_OPTION --alluredir=allure-results --clean-alluredir -v -s
                         '''
                     } else {
                         bat '''
                             call .\\.venv\\Scripts\\activate.bat
-                            python -m pytest testcases -m regression --alluredir=allure-results --clean-alluredir -v -s
+                            python -m pytest testcases -m regression --my-browser %BROWSER% %HEADLESS_OPTION% --alluredir=allure-results --clean-alluredir -v -s
                         '''
                     }
                 }
@@ -77,12 +86,12 @@ pipeline {
                     if (isUnix()) {
                         sh '''
                             . .venv/bin/activate
-                            python -m pytest testcases/e2e/Test_EndToEnd.py --alluredir=allure-results --clean-alluredir -v -s
+                            python -m pytest testcases/e2e/Test_EndToEnd.py --my-browser $BROWSER $HEADLESS_OPTION --alluredir=allure-results --clean-alluredir -v -s
                         '''
                     } else {
                         bat '''
                             call .\\.venv\\Scripts\\activate.bat
-                            python -m pytest testcases/e2e/Test_EndToEnd.py --alluredir=allure-results --clean-alluredir -v -s
+                            python -m pytest testcases/e2e/Test_EndToEnd.py --my-browser %BROWSER% %HEADLESS_OPTION% --alluredir=allure-results --clean-alluredir -v -s
                         '''
                     }
                 }

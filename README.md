@@ -122,6 +122,16 @@ pip install -r requirements.txt
 python -m playwright install --with-deps
 ```
 
+Create a root `.env` file for SauceDemo credentials before running tests:
+
+```dotenv
+SWAG_DEMO_USERNAME=your_saucedemo_username
+SWAG_DEMO_PASSWORD=your_saucedemo_password
+```
+
+The `.env` file is ignored by Git. CI can provide `SWAG_DEMO_USERNAME` and
+`SWAG_DEMO_PASSWORD` as environment variables instead.
+
 ---
 
 ## ▶️ Running Tests
@@ -130,6 +140,28 @@ Run the full regression suite:
 
 ```bash
 pytest testcases -m regression
+```
+
+The page-level regression tests run in purchase-flow order: login, home, add product, cart, checkout, payment, and order confirmation. They share a browser page, so run them without parallel execution.
+
+Choose a browser with the custom `--my-browser` option. Chrome (Chromium) is the default:
+
+```bash
+pytest testcases -m regression --my-browser chrome
+pytest testcases -m regression --my-browser firefox
+pytest testcases -m regression --my-browser webkit
+```
+
+Add `--no-headed` to run the selected browser in headless mode:
+
+```bash
+pytest testcases -m regression --my-browser chrome --no-headed
+```
+
+Install the browser binaries before running a browser for the first time:
+
+```bash
+python -m playwright install chromium firefox webkit
 ```
 
 Run the end-to-end flow:

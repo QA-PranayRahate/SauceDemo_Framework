@@ -2,12 +2,12 @@
 import os
 import pytest
 import allure
-import json
 import re
 import sys
 import shutil
 import subprocess
 from pathlib import Path
+from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 
 # Add testcases directory to path so page objects can be imported
@@ -21,11 +21,22 @@ from Page.LoginPage import LoginPage
 from Page.ProductPage import ProductPage
 from Page.OrderConfirmationPage import OrderConfirmationPage
 
-with (Path(__file__).parent.parent / ".auth" / "login_details.json").open(encoding='utf-8') as login_details_file:
-    LOGIN_DETAILS = json.load(login_details_file)
+load_dotenv(Path(__file__).parent.parent / ".env")
 
-DEFAULT_USERNAME = LOGIN_DETAILS['username']
-DEFAULT_PASSWORD = LOGIN_DETAILS['password']
+def pytest_addoption(parser):
+    parser.addoption(
+        "--my-browser",
+        action="store",
+        default="chrome",
+        choices=["chrome", "firefox", "webkit"],
+        help="Browser to run tests on",
+    )
+    parser.addoption(
+        "--no-headed",
+        action="store_true",
+        default=False,
+        help="Run the browser in headless mode",
+    )
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -37,7 +48,7 @@ def pytest_runtest_makereport(item, call):
         return
 
     page = item.funcargs.get('page')
-    if page is None:
+    if page is None or page.is_closed():
         return
 
     screenshot_dir = Path('screenshots')
@@ -61,40 +72,35 @@ def pytest_runtest_makereport(item, call):
 
 
 @pytest.fixture(scope="session")
-def browser():
-    headless = os.getenv("HEADLESS", "false").lower() == "true"   # added
+def browser(request):
+    headless = (
+        request.config.getoption("--no-headed")
+        or os.getenv("HEADLESS", "false").lower() == "true"
+    )
+    browser_name = request.config.getoption("--my-browser")
+
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(
-            headless=headless,                      # was: headless=False
-            args=["--start-maximized"],
-        )
+        if browser_name == "chrome":
+            browser = playwright.chromium.launch(
+                headless=headless,
+                args=["--start-maximized"],
+            )
+        elif browser_name == "firefox":
+            browser = playwright.firefox.launch(headless=headless)
+        elif browser_name == "webkit":
+            browser = playwright.webkit.launch(headless=headless)
+        else:
+            raise pytest.UsageError(
+                f"Unsupported browser '{browser_name}'. Choose chromium, firefox, or webkit."
+            )
+
         yield browser
         browser.close()
 
 @pytest.fixture(scope="session")
-def authenticated_state(browser):
-    """Login once and save the storage state for reuse in other tests"""
+def page(browser):
+    """Share one browser page across the ordered test flow."""
     context = browser.new_context(no_viewport=True)
-    page = context.new_page()
-    page.goto("https://www.saucedemo.com")
-    
-    # Perform login with credentials from JSON
-    loginpage = LoginPage(page)
-    loginpage.login_as_standard_user(DEFAULT_USERNAME, DEFAULT_PASSWORD)
-    
-    # Save the authenticated state
-    context.storage_state(path="state.json")
-    
-    context.close()
-    yield "state.json"
-
-@pytest.fixture(scope="session")
-def page(browser, authenticated_state):
-    """Use authenticated session from saved state"""
-    context = browser.new_context(
-        no_viewport=True,
-        storage_state=authenticated_state
-    )
     context.tracing.start(
         screenshots=True,
         snapshots=True,
@@ -102,7 +108,7 @@ def page(browser, authenticated_state):
     )
 
     page = context.new_page()
-    page.goto("https://www.saucedemo.com/inventory.html")
+    page.goto("https://www.saucedemo.com")
 
     try:
         yield page
@@ -110,6 +116,17 @@ def page(browser, authenticated_state):
         Path("traces").mkdir(exist_ok=True)
         context.tracing.stop(path="traces/trace.zip")
         context.close()
+
+@pytest.fixture
+def login_credentials():
+    username = os.getenv("SWAG_DEMO_USERNAME")
+    password = os.getenv("SWAG_DEMO_PASSWORD")
+    if not username or not password:
+        raise pytest.UsageError(
+            "Set SWAG_DEMO_USERNAME and SWAG_DEMO_PASSWORD in the root .env file "
+            "or in the environment."
+        )
+    return username, password
 
 
 @pytest.fixture(scope='class')
@@ -123,29 +140,24 @@ def homepage(page):
 
 @pytest.fixture(scope='class')
 def productpage(page):
-    page.goto("https://www.saucedemo.com/inventory-item.html?id=4")
-    return ProductPage(page)
+    product_page = ProductPage(page)
+    product_page.click_product_by_name()
+    return product_page
 
 @pytest.fixture(scope='class')
 def cartpage(page):
-    # page.goto("https://www.saucedemo.com/inventory.html")
-    # ProductPage(page).add_product_to_cart()
-    page.goto("https://www.saucedemo.com/cart.html")
     return CartPage(page)
 
 @pytest.fixture(scope='class')
 def checkoutpage(page):
-    page.goto("https://www.saucedemo.com/checkout-step-one.html")
     return CheckoutPage(page)
 
 @pytest.fixture(scope='class')
 def paymentpage(page):
-    page.goto("https://www.saucedemo.com/checkout-step-two.html")
     return PayementPage(page)
 
 @pytest.fixture(scope='class')
 def orderconfirmation(page):
-    page.goto('https://www.saucedemo.com/checkout-complete.html')
     return OrderConfirmationPage(page)
 
 

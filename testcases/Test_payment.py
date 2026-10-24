@@ -2,6 +2,7 @@ import pytest
 import allure
 
 @pytest.mark.regression
+@pytest.mark.run(order=6)
 class Test_payement:
 
     def test_current_url(self,paymentpage):
@@ -66,3 +67,7 @@ class Test_payement:
             cancel_visible = paymentpage.verify_cancel_button()
             print(f"Cancel button visible: {cancel_visible}")
             assert cancel_visible
+
+    def test_finish_order(self, paymentpage):
+        with allure.step("Finish the order"):
+            paymentpage.click_finish_button()

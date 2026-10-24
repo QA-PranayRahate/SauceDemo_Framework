@@ -1,6 +1,7 @@
 import pytest
 import allure
 @pytest.mark.regression
+@pytest.mark.run(order=2)
 class Test_HomePage:
 
 

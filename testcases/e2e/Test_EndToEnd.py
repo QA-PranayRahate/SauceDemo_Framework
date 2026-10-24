@@ -7,16 +7,22 @@ from Page.ProductPage import ProductPage
 from Page.checkoutPage import CheckoutPage
 from Page.payementPage import PayementPage
 from Page.OrderConfirmationPage import OrderConfirmationPage
+from Page.LoginPage import LoginPage
 
 
 @pytest.mark.regression
+@pytest.mark.run(order=8)
 @allure.feature("Purchase flow")
 @allure.story("Complete purchase")
 @allure.severity(allure.severity_level.CRITICAL)
 class TestEndToEnd:
     @allure.title("Complete purchase from inventory to order confirmation")
     @allure.description("Validates the complete authenticated SauceDemo purchase journey.")
-    def test_complete_purchase_flow(self, page):
+    def test_complete_purchase_flow(self, page, login_credentials):
+        username, password = login_credentials
+        page.goto("https://www.saucedemo.com")
+        LoginPage(page).login_as_standard_user(username, password)
+
         with allure.step("Verify the inventory page"):
             home_page = HomePage(page)
             assert home_page.get_current_url().endswith("/inventory.html")
@@ -67,7 +73,7 @@ class TestEndToEnd:
             assert confirmation_page.get_dashboard_text() == "Swag Labs"
             assert confirmation_page.get_order_status() == "Checkout: Complete!"
             assert "Your order has been dispatched" in confirmation_page.get_success_message()
-            confirmation_page.download_pdf_order()
+            assert confirmation_page.back_home_button.is_visible()
             confirmation_page.hamburger_menu()
             confirmation_page.logout()
             assert "saucedemo.com" in page.url

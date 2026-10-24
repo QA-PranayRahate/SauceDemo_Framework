@@ -16,6 +16,8 @@ roughwork/
 downloads/
 screenshots/
 state.json
+.env
+.auth/login_details.json
 
 # Selenium / browser runtime artifacts
 .geckodriver.log

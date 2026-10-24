@@ -3,6 +3,7 @@ import allure
 from playwright.sync_api import sync_playwright,expect
 
 @pytest.mark.regression
+@pytest.mark.run(order=4)
 class Test_cart:
 
     def test_view_cart(self, cartpage):
