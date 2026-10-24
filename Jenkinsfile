@@ -9,7 +9,7 @@ pipeline {
         )
         choice(
             name: 'BROWSER',
-            choices: ['chrome', 'firefox', 'webkit'],
+            choices: ['chrome', 'firefox', 'webkit', 'edge'],
             description: 'Choose the browser engine for the test run.'
         )
         booleanParam(
@@ -28,7 +28,7 @@ pipeline {
         PYTHONPATH = "${env.WORKSPACE}"
         ALLURE_RESULTS = 'allure-results'
         HEADLESS_OPTION = "${params.HEADLESS ? '--no-headed' : ''}"
-        PLAYWRIGHT_BROWSER = "${params.BROWSER == 'chrome' ? 'chromium' : params.BROWSER}"
+        PLAYWRIGHT_BROWSER = "${params.BROWSER == 'chrome' ? 'chromium' : (params.BROWSER == 'edge' ? 'msedge' : params.BROWSER)}"
     }
 
     stages {

@@ -150,6 +150,7 @@ Choose a browser with the custom `--my-browser` option. Chrome (Chromium) is the
 pytest testcases -m regression --my-browser chrome
 pytest testcases -m regression --my-browser firefox
 pytest testcases -m regression --my-browser webkit
+pytest testcases -m regression --my-browser edge
 ```
 
 Add `--no-headed` to run the selected browser in headless mode:
